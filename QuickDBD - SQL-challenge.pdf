@@ -1,0 +1,143 @@
+-- Exported from QuickDBD: https://www.quickdatabasediagrams.com/
+-- NOTE! If you have used non-SQL datatypes in your design, you will have to change these here.
+
+DROP TABLE IF EXISTS "departments";
+CREATE TABLE "departments" (
+    "dept_no" varchar   NOT NULL,
+    "dept_name" varchar   NOT NULL,
+    CONSTRAINT "pk_departments" PRIMARY KEY (
+        "dept_no"
+     )
+);
+
+DROP TABLE IF EXISTS "employees";
+CREATE TABLE "employees" (
+    "emp_no" int   NOT NULL,
+    "emp_title" varchar   NOT NULL,
+    "birth_date" date   NOT NULL,
+    "first_name" varchar   NOT NULL,
+    "last_name" varchar   NOT NULL,
+    "sex" varchar   NOT NULL,
+    "hire_date" date   NOT NULL,
+    CONSTRAINT "pk_employees" PRIMARY KEY (
+        "emp_no"
+     )
+);
+
+DROP TABLE IF EXISTS "department_manager";
+CREATE TABLE "department_manager" (
+    "dept_no" varchar   NOT NULL,
+    "emp_no" int   NOT NULL,
+    CONSTRAINT "pk_department_manager" PRIMARY KEY (
+        "dept_no", "emp_no"  --many departments have several managers each
+     )
+);
+
+INSERT INTO "department_manager" (dept_no, emp_no)  VALUES
+('d001', 	110022),
+('d001', 	110039),
+('d002', 	110085),
+('d002', 	110114),
+('d003', 	110183),
+('d003', 	110228),
+('d004', 	110303),
+('d004', 	110344),
+('d004', 	110386),
+('d004', 	110420),
+('d005', 	110511),
+('d005', 	110567),  
+('d006', 	110725),
+('d006', 	110765),
+('d006', 	110800),
+('d006', 	110854),
+('d007', 	111035),
+('d007', 	111133),
+('d008', 	111400),
+('d008', 	111534),
+('d009', 	111692),
+('d009', 	111784),
+('d009', 	111877),
+('d009', 	111939)
+
+
+DROP TABLE IF EXISTS "dept_emp";
+CREATE TABLE "dept_emp" (
+    "emp_no" int   NOT NULL,
+    "dept_no" varchar   NOT NULL,
+	CONSTRAINT "pk_dept_emp" PRIMARY KEY ("emp_no", "dept_no")
+);
+
+DROP TABLE IF EXISTS "salaries";
+CREATE TABLE "salaries" (
+    "emp_no" int   NOT NULL,
+    "salary" int   NOT NULL,
+    CONSTRAINT "pk_salaries" PRIMARY KEY (
+        "emp_no"
+     )
+);
+
+DROP TABLE IF EXISTS "titles";
+CREATE TABLE "titles" (
+    "title_id" varchar   NOT NULL,
+    "title" varchar   NOT NULL,
+    CONSTRAINT "pk_titles" PRIMARY KEY (
+        "title_id"
+     )
+);
+
+ALTER TABLE "department_manager" ADD CONSTRAINT "fk_department_manager_dept_no" FOREIGN KEY("dept_no")
+REFERENCES "departments" ("dept_no");
+
+ALTER TABLE "department_manager" ADD CONSTRAINT "fk_department_manager_emp_no" FOREIGN KEY("emp_no")
+REFERENCES "employees" ("emp_no");
+
+ALTER TABLE "dept_emp" ADD CONSTRAINT "fk_dept_emp_emp_no" FOREIGN KEY("emp_no")
+REFERENCES "employees" ("emp_no");
+
+ALTER TABLE "dept_emp" ADD CONSTRAINT "fk_dept_emp_dept_no" FOREIGN KEY("dept_no")
+REFERENCES "departments" ("dept_no");
+
+select employees.emp_no, last_name, first_name, sex, salaries.salary
+from employees
+inner join salaries on salaries.emp_no = employees.emp_no
+-- limit 5
+
+select first_name, last_name, hire_date
+from employees
+where DATE_PART('year',hire_date) = 1986
+-- limit 5
+
+select de.dept_no, dept_name, de.emp_no, last_name, first_name
+from  dept_emp de
+inner join departments d on de.dept_no = d.dept_no
+inner join employees e on de.dept_no = d.dept_no
+-- limit 5
+
+select de.emp_no, last_name, first_name, dept_name
+from  dept_emp de
+inner join departments d on de.dept_no = d.dept_no
+inner join employees e on de.dept_no = d.dept_no
+--limit 5
+
+select first_name, last_name, sex
+from  employees 
+where first_name = 'Hercules' and left(last_name,1) = 'B'
+--limit 5
+
+select de.emp_no, last_name, first_name, dept_name
+from  dept_emp de
+inner join departments d on de.dept_no = d.dept_no and d.dept_name = 'Sales'
+inner join employees e on de.dept_no = d.dept_no
+--limit 5
+
+select de.emp_no, last_name, first_name, dept_name
+from  dept_emp de
+inner join departments d on de.dept_no = d.dept_no and (d.dept_name = 'Sales' or d.dept_name = 'Development')
+inner join employees e on de.dept_no = d.dept_no
+--limit 5
+
+select last_name, count(*) ct 
+from employees
+group by last_name
+--having count(*) < 10  -- for fun, the only unique last_name is 'Foolsday'
+order by count(*) desc
